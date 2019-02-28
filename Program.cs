@@ -10,7 +10,7 @@ namespace MyDex
     class Program
     {
         // MySQL Database Connection String
-        static string cs = @"server=0.0.0.0;userid=dbremoteuser;password=password;database=MyDex;port=8889";
+        static string cs = @"server=10.0.0.101;userid=dbremoteuser;password=password;database=MyDex;port=8889";
 
         static void Main(string[] args)
         {
@@ -35,7 +35,7 @@ namespace MyDex
                 Console.Clear();
                 Console.WriteLine("--- MyDex ---");
                 Console.WriteLine(menu);
-                Console.Write("\n Selection: ");
+                Console.Write("\nSelection: ");
                 inputLine = Console.ReadLine().ToLower();
 
                 switch (inputLine)
@@ -113,10 +113,12 @@ namespace MyDex
                     {
                         Console.WriteLine($"Favorite: No\tSound: {rdr["Sound"]}");
                     }
+                    Console.WriteLine();
                     if (infoBreaker >= 3)
                     {
                         Utility.KeyToProceed();
                         infoBreaker = 0;
+                        Console.Clear();
                     }
                 }
                 Utility.KeyToProceed();
@@ -241,16 +243,18 @@ namespace MyDex
                 stm = "SELECT TeamID, TeamName FROM Teams WHERE TeamName = @teamName";
 
                 MySqlConnection conn2 = new MySqlConnection(cs);
+                conn2.Open();
                 MySqlCommand cmd2 = new MySqlCommand(stm, conn2);
-                MySqlDataReader rdr2 = cmd.ExecuteReader();
+                cmd2.Parameters.AddWithValue("@teamName", teamName);
+                MySqlDataReader rdr2 = cmd2.ExecuteReader();
 
-                while (rdr.Read())
+                while (rdr2.Read())
                 {
-                    string readID = rdr["TeamID"] as string;
+                    string readID = rdr2["TeamID"] as string;
                     while (!int.TryParse(readID, out teamID))
                     {
                         Console.WriteLine($"ID not recognized.\n" +
-                            $"Please input the number seen here: {rdr["TeamID"]}");
+                            $"Please input the number seen here: {rdr2["TeamID"]}");
                         readID = Console.ReadLine();
                     }
                 }
@@ -260,7 +264,53 @@ namespace MyDex
 
         public static void TeamScreen(int teamNumberID)
         {
+            using (MySqlConnection conn = new MySqlConnection(cs))
+            {
+                conn.Open();
+                MySqlDataReader rdr = null;
 
+                string stm = "SELECT Teams.TeamName AS TeamName, Pokemon.Name AS PokemonName, mv1.Name AS Move1Name, mv2.Name AS Move2Name, mv3.Name AS Move3Name, mv4.Name AS Move4Name, Item.Name AS ItemName, Ability.Name AS AbilityName, Nature.Name AS NatureName " +
+                    "FROM Team " +
+                    "LEFT JOIN Teams ON Teams.TeamID = Team.TeamID " +
+                    "LEFT JOIN Pokemon ON Pokemon.PokemonID = Team.PokemonID " +
+                    "LEFT JOIN Move AS mv1 ON mv1.MoveID = Team.Move1ID " +
+                    "LEFT JOIN Move AS mv2 ON mv2.MoveID = Team.Move2ID " +
+                    "LEFT JOIN Move AS mv3 ON mv3.MoveID = Team.Move3ID " +
+                    "LEFT JOIN Move AS mv4 ON mv4.MoveID = Team.Move4ID " +
+                    "LEFT JOIN Item ON Item.ItemID = Team.ItemID " +
+                    "LEFT JOIN Ability ON Ability.AbilityID = Team.AbilityID " +
+                    "LEFT JOIN Nature ON Nature.NatureID = Team.NatureID " +
+                    "WHERE Team.TeamID = @teamNumberID";
+                
+                MySqlCommand cmd = new MySqlCommand(stm, conn);
+                cmd.Parameters.AddWithValue("@teamNumberID", teamNumberID);
+                rdr = cmd.ExecuteReader();
+                bool firstItem = true;
+                int number = 1;
+                Console.Clear();
+                while (rdr.Read())
+                {
+                    if (firstItem)
+                    {
+                        Console.WriteLine($"==={rdr["TeamName"]}===\n");
+                        Console.WriteLine($"Pokemon {number}: {rdr["PokemonName"]}\n" +
+                            $"Ability: {rdr["AbilityName"]}\n" +
+                            $"Nature: {rdr["NatureName"]}\tItem: {rdr["ItemName"]}\n\n" +
+                            $"Move 1: {rdr["Move1Name"]}\tMove 3: {rdr["Move3Name"]}\n" +
+                            $"Move 2: {rdr["Move2Name"]}\tMove 4: {rdr["Move4Name"]}\n");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Pokemon: {rdr["PokemonName"]}\n" +
+                            $"Ability: {rdr["AbilityName"]}\n" +
+                            $"Nature: {rdr["NatureName"]}\tItem: {rdr["ItemName"]}\n\n" +
+                            $"Move 1: {rdr["Move1Name"]}\tMove 3: {rdr["Move3Name"]}\n" +
+                            $"Move 2: {rdr["Move2Name"]}\tMove 4: {rdr["Move4Name"]}\n");
+                    }
+                    number++;
+                }
+                Utility.KeyToProceed();
+            }
         }
 
         public static void Moves()
@@ -270,7 +320,7 @@ namespace MyDex
                 conn.Open();
                 MySqlDataReader rdr = null;
 
-                string stm = "SELECT Name, Power, Accuracy, PP, Type1, Type2, Phys-Spec-Stat, Generation FROM Move";
+                string stm = "SELECT Name, Power, Accuracy, PP, Type1, Type2, \"Phys-Spec-Stat\", Generation FROM Move";
 
                 MySqlCommand cmd = new MySqlCommand(stm, conn);
                 rdr = cmd.ExecuteReader();
@@ -291,7 +341,7 @@ namespace MyDex
                     }
                     else
                     {
-                        Console.WriteLine($"PP: {rdr["PP"]}\tStatus Move");
+                        Console.WriteLine($"PP: {rdr["PP"]}\t\tStatus Move");
                     }
                     if (!(rdr["Type2"] as string == "Null"))
                     {
@@ -301,10 +351,12 @@ namespace MyDex
                     {
                         Console.WriteLine($"Type: {rdr["Type1"]}");
                     }
+                    Console.WriteLine();
                     if (infoBreaker >= 3)
                     {
                         Utility.KeyToProceed();
                         infoBreaker = 0;
+                        Console.Clear();
                     }
                 }
                 Utility.KeyToProceed();
@@ -387,10 +439,12 @@ namespace MyDex
                     infoBreaker++;
                     Console.WriteLine($"Name: {rdr["Name"]}\n" +
                         $"Description: {rdr["Description"]}");
+                    Console.WriteLine();
                     if (infoBreaker >= 4)
                     {
                         Utility.KeyToProceed();
                         infoBreaker = 0;
+                        Console.Clear();
                     }
                 }
                 Utility.KeyToProceed();
@@ -415,10 +469,12 @@ namespace MyDex
                     infoBreaker++;
                     Console.WriteLine($"Name: {rdr["Name"]}\tGeneration: {rdr["Generation"]}\n" +
                         $"Description: {rdr["Description"]}");
+                    Console.WriteLine();
                     if (infoBreaker >= 4)
                     {
                         Utility.KeyToProceed();
                         infoBreaker = 0;
+                        Console.Clear();
                     }
                 }
                 Utility.KeyToProceed();
@@ -443,10 +499,12 @@ namespace MyDex
                     infoBreaker++;
                     Console.WriteLine($"Name: {rdr["Name"]}\n" +
                         $"Stat Increased: {rdr["StatIncreased"]}\tStat Decreased: {rdr["StatDecreased"]}");
+                    Console.WriteLine();
                     if (infoBreaker >= 5)
                     {
                         Utility.KeyToProceed();
                         infoBreaker = 0;
+                        Console.Clear();
                     }
                 }
                 Utility.KeyToProceed();

@@ -1,0 +1,9 @@
+\\vmware-host\Shared Folders\Downloads\MyDex\MyDex\bin\Debug\MyDex.exe.config
+\\vmware-host\Shared Folders\Downloads\MyDex\MyDex\bin\Debug\MyDex.exe
+\\vmware-host\Shared Folders\Downloads\MyDex\MyDex\bin\Debug\MyDex.pdb
+\\vmware-host\Shared Folders\Downloads\MyDex\MyDex\bin\Debug\MySql.Data.dll
+\\vmware-host\Shared Folders\Downloads\MyDex\MyDex\obj\Debug\MyDex.csprojAssemblyReference.cache
+\\vmware-host\Shared Folders\Downloads\MyDex\MyDex\obj\Debug\MyDex.csproj.CoreCompileInputs.cache
+\\vmware-host\Shared Folders\Downloads\MyDex\MyDex\obj\Debug\MyDex.csproj.CopyComplete
+\\vmware-host\Shared Folders\Downloads\MyDex\MyDex\obj\Debug\MyDex.exe
+\\vmware-host\Shared Folders\Downloads\MyDex\MyDex\obj\Debug\MyDex.pdb
