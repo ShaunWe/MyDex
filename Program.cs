@@ -119,6 +119,7 @@ namespace MyDex
                         infoBreaker = 0;
                     }
                 }
+                Utility.KeyToProceed();
             }
         }
 
@@ -135,6 +136,129 @@ namespace MyDex
         }
 
         public static void Teams()
+        {
+            //Gather the teams that are currently in the database
+            string inputLine;
+            int teamSelection = 0;
+            bool teamSelectionMade = false;
+            Dictionary<int, string> listedTeams = new Dictionary<int, string>();
+            using (MySqlConnection conn = new MySqlConnection(cs))
+            {
+                conn.Open();
+                MySqlDataReader rdr = null;
+
+                string stm = "SELECT TeamID, TeamName FROM Teams";
+
+                string inputID = "", inputName = "";
+                int ID = 0;
+                MySqlCommand cmd = new MySqlCommand(stm, conn);
+                rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    inputName = rdr["TeamName"] as string;
+                    inputID = rdr["TeamID"] as string;
+                    while (!int.TryParse(inputID, out ID))
+                    {
+                        Console.WriteLine($"ID not recognized.\n" +
+                            $"Please input the number seen here: {rdr["TeamID"]}");
+                        inputID = Console.ReadLine();
+                    }
+                    listedTeams.Add(ID, inputName);
+                }
+            }
+
+            while (!teamSelectionMade)
+            {
+                //Display all available teams
+                Console.Clear();
+                foreach (KeyValuePair<int, string> kvp in listedTeams)
+                {
+                    Console.WriteLine($"{kvp.Key}. {kvp.Value}");
+                }
+                //Add options for back and add options
+                Console.WriteLine($"{listedTeams.Count + 1}. Add new team");
+                Console.WriteLine($"{listedTeams.Count + 2}. Back");
+                Console.Write("\nSelection: ");
+
+                inputLine = Console.ReadLine().ToLower();
+                //Adding new team
+                if (inputLine == $"{listedTeams.Count + 1}" || inputLine == "add new team")
+                {
+                    inputLine = "";
+                    Console.Clear();
+                    Console.Write("What is the name of the new team? ");
+                    inputLine = Console.ReadLine();
+                    while (string.IsNullOrWhiteSpace(inputLine))
+                    {
+                        Console.WriteLine("There needs to be a team name. Please enter a team name for the new team.");
+                        Console.Write("Team: ");
+                        inputLine = Console.ReadLine();
+                    }
+                    teamSelection = AddNewTeam(inputLine);
+                    teamSelectionMade = true;
+                }
+                //Going back
+                if (inputLine == $"{listedTeams.Count + 2}" || inputLine == "back")
+                {
+                    return;
+                }
+
+                foreach (KeyValuePair<int, string> kvp in listedTeams)
+                {
+                    if (inputLine == $"{kvp.Key}" || inputLine == $"{kvp.Value.ToLower()}")
+                    {
+                        teamSelection = kvp.Key;
+                        teamSelectionMade = true;
+                    }
+                }
+
+                if (!teamSelectionMade)
+                {
+                    Console.WriteLine("Entry not recognized...");
+                    Utility.KeyToProceed();
+                }
+            }
+
+            TeamScreen(teamSelection);
+        }
+
+        public static int AddNewTeam(string teamName)
+        {
+            int teamID = 0;
+            using (MySqlConnection conn = new MySqlConnection(cs))
+            {
+                conn.Open();
+                MySqlDataReader rdr = null;
+
+                string stm = "INSERT INTO Teams (TeamName) VALUES (@teamName)";
+
+                MySqlCommand cmd = new MySqlCommand(stm, conn);
+                cmd.Parameters.AddWithValue("@teamName", teamName);
+
+                rdr = cmd.ExecuteReader();
+
+                //Get teamID of newly created team to return
+                stm = "SELECT TeamID, TeamName FROM Teams WHERE TeamName = @teamName";
+
+                MySqlConnection conn2 = new MySqlConnection(cs);
+                MySqlCommand cmd2 = new MySqlCommand(stm, conn2);
+                MySqlDataReader rdr2 = cmd.ExecuteReader();
+
+                while (rdr.Read())
+                {
+                    string readID = rdr["TeamID"] as string;
+                    while (!int.TryParse(readID, out teamID))
+                    {
+                        Console.WriteLine($"ID not recognized.\n" +
+                            $"Please input the number seen here: {rdr["TeamID"]}");
+                        readID = Console.ReadLine();
+                    }
+                }
+            }
+            return teamID;
+        }
+
+        public static void TeamScreen(int teamNumberID)
         {
 
         }
@@ -183,12 +307,168 @@ namespace MyDex
                         infoBreaker = 0;
                     }
                 }
+                Utility.KeyToProceed();
             }
         }
 
         public static void Options()
         {
+            string menu = "1. Items\n" +
+                "2. Abilities\n" +
+                "3. Natures\n" +
+                "4. Show Favorites\n" +
+                "5. Settings\n" +
+                "6. Upgrade\n" +
+                "7. Back";
+            bool menuRunning = true;
+            string inputLine;
 
+            while (menuRunning)
+            {
+                Console.Clear();
+                Console.WriteLine(menu);
+                Console.Write("\nSelection: ");
+
+                inputLine = Console.ReadLine().ToLower();
+                switch (inputLine)
+                {
+                    case "1":
+                    case "items":
+                        Items();
+                        break;
+                    case "2":
+                    case "abilities":
+                        Abilities();
+                        break;
+                    case "3":
+                    case "natures":
+                        Natures();
+                        break;
+                    case "4":
+                    case "show favorites":
+                        ShowFavorites();
+                        break;
+                    case "5":
+                    case "settings":
+                        Settings();
+                        break;
+                    case "6":
+                    case "upgrade":
+                        Upgrade();
+                        break;
+                    case "7":
+                    case "back":
+                    case "exit":
+                        menuRunning = false;
+                        break;
+                    default:
+                        Console.WriteLine("Entry not recognized...");
+                        Utility.KeyToProceed();
+                        break;
+                }
+            }
+        }
+
+        public static void Items()
+        {
+            using (MySqlConnection conn = new MySqlConnection(cs))
+            {
+                conn.Open();
+                MySqlDataReader rdr = null;
+
+                string stm = "SELECT Name, Description FROM Item";
+
+                MySqlCommand cmd = new MySqlCommand(stm, conn);
+                rdr = cmd.ExecuteReader();
+                Console.Clear();
+                int infoBreaker = 0;
+                while (rdr.Read())
+                {
+                    infoBreaker++;
+                    Console.WriteLine($"Name: {rdr["Name"]}\n" +
+                        $"Description: {rdr["Description"]}");
+                    if (infoBreaker >= 4)
+                    {
+                        Utility.KeyToProceed();
+                        infoBreaker = 0;
+                    }
+                }
+                Utility.KeyToProceed();
+            }
+        }
+
+        public static void Abilities()
+        {
+            using (MySqlConnection conn = new MySqlConnection(cs))
+            {
+                conn.Open();
+                MySqlDataReader rdr = null;
+
+                string stm = "SELECT Name, Description, Generation FROM Ability";
+
+                MySqlCommand cmd = new MySqlCommand(stm, conn);
+                rdr = cmd.ExecuteReader();
+                Console.Clear();
+                int infoBreaker = 0;
+                while (rdr.Read())
+                {
+                    infoBreaker++;
+                    Console.WriteLine($"Name: {rdr["Name"]}\tGeneration: {rdr["Generation"]}\n" +
+                        $"Description: {rdr["Description"]}");
+                    if (infoBreaker >= 4)
+                    {
+                        Utility.KeyToProceed();
+                        infoBreaker = 0;
+                    }
+                }
+                Utility.KeyToProceed();
+            }
+        }
+
+        public static void Natures()
+        {
+            using (MySqlConnection conn = new MySqlConnection(cs))
+            {
+                conn.Open();
+                MySqlDataReader rdr = null;
+
+                string stm = "SELECT Name, StatIncreased, StatDecreased FROM Nature";
+
+                MySqlCommand cmd = new MySqlCommand(stm, conn);
+                rdr = cmd.ExecuteReader();
+                Console.Clear();
+                int infoBreaker = 0;
+                while (rdr.Read())
+                {
+                    infoBreaker++;
+                    Console.WriteLine($"Name: {rdr["Name"]}\n" +
+                        $"Stat Increased: {rdr["StatIncreased"]}\tStat Decreased: {rdr["StatDecreased"]}");
+                    if (infoBreaker >= 5)
+                    {
+                        Utility.KeyToProceed();
+                        infoBreaker = 0;
+                    }
+                }
+                Utility.KeyToProceed();
+            }
+        }
+
+        public static void ShowFavorites()
+        {
+            Console.WriteLine("Show favorites function currently under construction");
+            Utility.KeyToProceed();
+        }
+
+        public static void Settings()
+        {
+            Console.WriteLine("Settings function currently under construction");
+            Utility.KeyToProceed();
+        }
+
+        public static void Upgrade()
+        {
+            Console.WriteLine("Upgrade function currently under construction");
+            Utility.KeyToProceed();
         }
 
         public static PokeType DetermineType(string typeString)
